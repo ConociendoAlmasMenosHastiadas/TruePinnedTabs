@@ -1,0 +1,46 @@
+name: Build XPI
+
+on:
+  push:
+    branches: [primarius]
+  pull_request:
+    branches: [primarius]
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Read the version straight from the manifest so the filename stays in sync.
+      - name: Read version from manifest
+        id: ver
+        run: |
+          VERSION=$(python3 -c "import json,sys; print(json.load(open('src/manifest.json'))['version'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create artifacts directory
+        run: mkdir -p artifacts
+
+      # A .xpi is just a ZIP of the src/ contents — no external tools needed.
+      - name: Build XPI
+        run: |
+          cd src
+          zip -r "../artifacts/true_pinned_tabs-${{ steps.ver.outputs.version }}.xpi" .
+
+      - name: Upload XPI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: true-pinned-tabs-xpi
+          path: artifacts/*.xpi
+          if-no-files-found: error
+
+      # Attach the XPI to the GitHub release automatically.
+      - name: Attach XPI to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.xpi

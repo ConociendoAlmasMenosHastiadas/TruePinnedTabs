@@ -1,0 +1,10 @@
+artifacts/
+plans/
+
+# VS Code agent / Copilot customization files (personal, not team-shared)
+.github/copilot-instructions.md
+.github/prompts/
+.github/agents/
+.github/instructions/
+.github/hooks/
+.github/skills/
